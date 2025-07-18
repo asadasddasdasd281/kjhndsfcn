@@ -1,0 +1,530 @@
+Fake order report tool for Vision ML Labeling and Form data organization
+ Overview:
+Build a full-stack web app that enables users (authenticators) to create and manage authentication sessions for sneaker products. Each session is tied to a Product Number and consists of:
+A Form Submission Flow with detailed product and verdict fields.
+
+
+An Image Upload + Labeling Flow for training a sneaker-specific vision ML model.
+
+
+Users must complete both flows, and can do them in any order. Data is saved incrementally so that secondary authenticators or regional reviewers can later access and add additional details.
+
+User Flow:
+1. Start Session
+Prompt user for a Product Number (PN#) to initialize a project/session.
+
+
+This PN# becomes the unique project/session name and key for saving/loading data.
+
+
+2. Main Options Page
+Display two primary options:
+Upload Images
+
+
+Fill Out Form
+
+
+After completing either, users return to this screen. They must complete both before export is enabled but any progress is saved.
+
+Image Upload + Labeling Flow
+Upload Capabilities:
+Upload individual image files or .zip files.
+
+
+Zip files should be extracted on upload and treated as image uploads.
+
+
+Stage uploaded images in a gallery view.
+
+
+Labeling UI:
+Display one image at a time in focus.
+Labeling tool should support bounding boxes or polygon masks and associated label names.
+
+
+Allow users to label specific regions or parts of the sneaker with the attribute they are claiming to be the reason for why they think it is inauthentic
+When they finish drawing a box or polygon, we shout bring up a prompt that asks them to label that drawing, we can provide a section with [Box Issues, Tag Issues, Documentation & Packaging, Specific Model Elements, Logo & Branding Issues, Material & Construction Issues] as categories, when they click on them more options withing that category show up, we can provide this in a csv file the app can reference called for_fake_reasons.csv
+
+
+Save each image with:
+
+
+Original version
+
+
+Labeled annotations (JSON or VOC/YOLO format)
+
+
+Labeled image preview
+
+
+Allow as many labels as the user feels necessary for model training.
+
+Form Flow
+Each session must include a form that captures metadata and authentication results.
+Form Fields:
+Section 1: Product + Authenticator Info
+Date: date (default to today)
+
+
+Order #: text
+
+
+PN #: text
+
+
+Model: text
+
+
+Auth Duration: text
+
+
+Authenticator: text
+
+
+Employee ID: text
+
+
+Initial Auth Warehouse: dropdown from warehouses.csv
+
+
+Was Product Double Confirmed? true/false
+
+
+Section 2: Authenticity Confirmation + Proof of Issue
+Authenticator: text
+
+
+Facility: dropdown
+
+
+Verdict: Real/Fake
+
+
+Reason for Verdict: text
+
+
+2nd Authenticator: text
+
+
+Facility: dropdown
+
+
+Verdict: Real/Fake
+
+
+Reason for Verdict: text
+
+
+Regional Confirmation: text
+
+
+Facility: dropdown
+
+
+Verdict: Real/Fake
+
+
+Reason for Verdict: text
+
+
+Section 3: Feedback and Review
+Feedback Notes: free text
+
+
+Date of Conversation: date
+
+
+Within CAPS?: true/false
+
+
+Verdict After Review: Real/Fake
+
+
+Final Section:
+Additional Notes/Feedback: free text
+
+
+Note: Initially, only the first authenticator may fill out the form. Save progress for later access by 2nd Authenticator or Regional. When the 2nd auth or regional come to fill out the form, they should initially be able to see the status of the form as a whole, they should be able to see auth1 complete etc. they should still be able to proceed to download part of the process despite nulls
+
+Project Save & Collaboration
+Each session must:
+Be persistently saved by PN# in backend storage.
+
+
+Allow future access to the same session to:
+
+
+Update form fields (e.g., 2nd authenticator’s data).
+
+
+Continue labeling.
+
+
+Save image annotations alongside original files.
+
+
+Storage format:
+bash
+CopyEdit
+/project-[PN#]/
+├── /images/
+│   ├── /original/
+│   └── /labeled/
+├── /annotations/
+│   ├── image1.json
+│   └── ...
+├── /form/
+│   ├── form.csv
+│   └── form.xlsx
+
+
+Download / Export Flow
+After both form and image labeling are complete:
+Display a Download Session button.
+
+
+Download is a zip file with:
+
+
+/images/ folder:
+
+
+/original/ – raw uploads
+
+
+/labeled/ – labeled images with overlays or annotations
+
+
+/form/ folder:
+
+
+A CSV file of the form
+
+
+An Excel file with similar visual formatting
+
+
+
+Tech & Design Notes (Optional Suggestions)
+Frontend: React (or HTML/JS with libraries like Dropzone.js, Fabric.js for labeling)
+
+
+Backend: Node.js + Express or Python Flask
+
+
+Storage: Local for MVP (e.g., filesystem or SQLite); scalable options could be S3 + DynamoDB
+
+
+Form XLSX Export: Use xlsx (JS) or openpyxl (Python)
+
+
+Vision Labeling Tool: LabelMe, MakeSense.ai embed, or custom canvas with Fabric.js
+
+
+
+
+
+ 
+
+Prompt: Build a Sneaker Authentication Session App
+Vision ML Labeling + Metadata Collection for Inauthenticity Analysis
+
+Overview:
+Build a full-stack web application to help authenticators create and manage authentication sessions for sneaker products identified to be inauthentic. Each session is tied to a Product Number (PN#) and consists of:
+A Form Submission Flow with structured metadata and verdict fields.
+
+
+An Image Upload + Labeling Flow for preparing data to train a sneaker-specific vision ML model that will the goal of teaching it what an inauthentic product looks like, these images will contain all the labels pointing to elements of the shoe that are responsible for the product’s classification as inauthentic
+Users must complete at least the photo flow and the initial auth 1 part of the form flow before final export is enabled, but they may proceed in any order. All progress is saved incrementally, so secondary authenticators or regional trainers can later contribute to the form flow or the image flow without losing prior data.
+
+User Flow
+1. Start Session
+Prompt the user to input a Product Number (PN#).
+
+
+Use the PN# to initialize and uniquely identify the project session.
+
+
+Save all data under a project path named after the PN#.
+
+
+2. Main Options Page
+Display two options:
+
+
+Upload Images
+
+
+Fill Out Form
+
+
+After completing either flow, return users to this screen.
+Users must complete both (at least the 1st authenticator section in the form) before the download option is enabled.
+Fill out form section should indicate if the auth 1, auth2 information has been added or not kinda like a status of the form
+Progress is saved, and incomplete states should not block collaboration.
+
+
+
+Image Upload + Labeling Flow
+Upload Capabilities
+Accept both:
+
+
+Individual image files
+
+
+.zip files (extract contents and treat as image uploads)
+
+
+Show uploaded images in a gallery view for easy selection and navigation.
+
+
+Labeling UI
+Focus on one image at a time.
+
+
+Users must draw bounding boxes or polygon masks to highlight the region in question.
+
+
+After drawing, show a labeling prompt with a dynamic category selector.
+
+
+Labeling Categories
+Pull label categories and sub-options from a for_fake_reasons.csv file [make a placeholder file so I can know where to overwrite it].
+
+
+High-level categories:
+
+
+Box Issues
+
+
+Tag Issues
+
+
+Documentation & Packaging
+
+
+Specific Model Elements
+
+
+Logo & Branding Issues
+
+
+Material & Construction Issues
+
+
+On category click, show sub-options for more granular labeling.
+
+
+Image Saving
+For each image:
+
+
+Save original file.
+
+
+Save labeled version of image.
+
+
+Save annotations in a standard format for ML image learning (e.g., COCO, VOC XML, or YOLO TXT).
+
+
+Save per-image annotations in /annotations/.
+
+
+Allow users to label as much detail as necessary per image.
+
+
+
+Form Flow
+Section 1: Product + Authenticator Info
+Date: [auto-filled to today]
+
+
+Order #: text
+
+
+PN #: text
+
+
+Model: text
+
+
+Auth Duration: seconds
+
+
+Authenticator: text
+
+
+Employee ID: text
+
+
+Initial Auth Warehouse: dropdown (populated from warehouses.csv)
+
+
+Was Product Double Confirmed?: true/false
+
+
+Section 2: Authenticity Confirmation + Proof of Issue
+Authenticator #1
+
+
+Authenticator: text
+
+
+Facility: dropdown
+
+
+Verdict: Real/Fake
+
+
+Reason: text
+Reason categories: [Pull and show label categories and sub-options from a for_fake_reasons.csv file, allow multi select sub-options, show categories first, they can click on them then pull up the sub options to select]
+
+
+2nd Authenticator
+
+
+Authenticator: text
+
+
+Facility: dropdown
+
+
+Verdict: Real/Fake
+
+
+Reason: text
+Reason categories: [Pull and show label categories and sub-options from a for_fake_reasons.csv file, allow multi select sub-options, show categories first, they can click on them then pull up the sub options to select]
+
+
+
+Regional Confirmation
+
+
+Trainer: text
+
+
+Facility: dropdown
+
+
+Verdict: Real/Fake
+
+
+Reason: text
+Reason categories: [Pull and show label categories and sub-options from a for_fake_reasons.csv file, allow multi select sub-options, show categories first, they can click on them then pull up the sub options to select]
+
+
+
+Section 3: Feedback & Review
+Feedback Notes: free text
+
+
+Date of Conversation: date
+
+
+Within CAPS?: true/false
+
+
+Verdict After Review: Real/Fake
+Reason categories: [Pull and show label categories and sub-options from a for_fake_reasons.csv file, allow multi select sub-options, show categories first, they can click on them then pull up the sub options to select]
+
+
+
+Final Section:
+Additional Notes/Feedback: free text
+
+
+
+Collaboration Support
+Authenticator 1 typically fills out the form initially.
+
+
+When a second authenticator or regional user accesses the session:
+
+
+Show form section status (e.g., Authenticator 1 complete).
+
+
+Allow form editing even if some sections have null values.
+
+
+They should still be able to download even if part of the session is incomplete.
+
+
+
+Project Saving & Structure
+Save everything by PN# using the following folder structure:
+bash
+CopyEdit
+/project-[PN#]/
+├── /images/
+│   ├── /original/
+│   └── /labeled/
+├── /annotations/
+│   ├── image1.json
+│   └── ...
+├── /form/
+│   ├── form.csv
+│   └── form.xlsx
+
+All form inputs and image data must be saved persistently and reloadable.
+
+Download / Export Flow
+After form + image labeling are complete:
+Show a Download Session button.
+
+
+The download will be a .zip archive structured as:
+
+
+bash
+CopyEdit
+project-[PN#].zip
+├── /images/
+│   ├── /original/
+│   └── /labeled/
+├── /annotations/
+├── /form/
+│   ├── form.csv
+│   └── form.xlsx
+
+
+Tech & Design Suggestions
+Frontend
+React.js (preferred)
+
+
+Dropzone.js for drag-and-drop uploads
+
+
+Fabric.js or Konva for image labeling
+
+
+Backend
+Node.js + Express or Python + Flask/FastAPI
+
+
+File Handling
+Use adm-zip (Node.js) or zipfile (Python) for .zip processing
+
+
+Store files locally for MVP; use S3 for scalability
+
+
+XLSX & CSV Form Export
+Node.js: xlsx npm package
+
+
+Python: openpyxl + csv modules
+
+
+Optional Labeling Tool Integrations
+Embed LabelMe or MakeSense.ai
+
+
+OR build a custom labeling canvas (more control)
+
